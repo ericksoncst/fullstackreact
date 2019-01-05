@@ -1,10 +1,22 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const { mongoURI } = require('./config/keys');
+const cokkieSession = require('cookie-session');
+const passport = require('passport');
+const { mongoURI, cookieKey } = require('./config/keys');
 require('./models/User');
 require('./services/passport');
 
 const app = express();
+
+app.use(
+    cokkieSession({
+        maxAge: 30 * 24 * 60 * 60 * 1000, //one month
+        keys: [ cookieKey ]
+    })
+);
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 require('./routes/authRoutes')(app);
 
