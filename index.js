@@ -1,28 +1,21 @@
 const express = require('express');
-const passport = require('passport');
-const GoogleStrategy = require('passport-google-oauth20').Strategy;
-const { googleClientID, googleClientSecret } = require('../server/config/keys');
+const mongoose = require('mongoose');
+const { mongoURI } = require('./config/keys');
+require('./models/User');
+require('./services/passport');
 
 const app = express();
 
-passport.use(new GoogleStrategy({
-    clientID: googleClientID,
-    clientSecret: googleClientSecret,
-    callbackURL: '/auth/google/callback'
-}, (accessToken, refreshToken, profile, done) => {
-    console.log('Access token: ' + accessToken);
-    console.log('Refresh token: ' + refreshToken);
-    console.log('Profile: ' + profile);
-}));
-
-app.get('/auth/google', 
-    passport.authenticate('google', {
-        scope: ['profile', 'email']
-    })
-);
-
-app.get('/auth/google/callback', passport.authenticate('google'));
+require('./routes/authRoutes')(app);
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, ()=> console.log('Server ok'));
+mongoose
+    .connect(mongoURI, { useNewUrlParser : true })
+    .then(
+        app.listen(PORT, ()=> {
+            console.log(`Server running on port ${PORT}`);
+            console.log('Mongo ok');
+        })
+    )
+    .catch(err => console.log(err));
