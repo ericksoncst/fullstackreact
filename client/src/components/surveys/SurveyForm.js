@@ -5,19 +5,13 @@ import _ from 'lodash';
 
 
 import SurveyField from './SurveyField';
-
-const FIELDS = [
-  {label: "Survey Title", name: "title"},
-  {label: "Subject Line", name: "subject"},
-  {label: "Email Body", name: "body"},
-  {label: "Recipient List", name: "email"}
-];
-
+import validateEmails from '../../utils/validateEmails';
+import formFields from './formFields';
 
 class SurveyForm extends Component {
 
   renderFields() {
-    return _.map(FIELDS, ({ label, name }) => {
+    return _.map(formFields, ({ label, name }) => {
       return (
         <Field key={name} component={SurveyField} type="text" name={name} label={label}/>
       );
@@ -26,22 +20,40 @@ class SurveyForm extends Component {
 
   render() {
     return (
-      <div> 
-          <form onSubmit={this.props.handleSubmit(values => console.log(values))}>
+      <div style={{ marginTop: '20px'}}> 
+          <form onSubmit={this.props.handleSubmit(() => this.props.onSurveySubmit())}>
             {this.renderFields()}
-            <Link to="/surveys" className="red btn-flat left white-text">
-              Cancel
-            </Link>
-            <button type="submit" className="teal btn-flat right white-text">
-              NEXT
-              <i className="material-icons right">done</i>
-            </button>
+            <div style={{ marginTop: '15px'}}>
+              <Link to="/surveys" className="red btn-flat left white-text">
+                Cancel
+              </Link>
+              <button type="submit" className="teal btn-flat right white-text">
+                NEXT
+                <i className="material-icons right">done</i>
+              </button>
+            </div>
           </form>
       </div>
     )
   }
 }
 
+function validate(values) {
+  const errors = {};
+
+  errors.recipients = validateEmails(values.recipients || '');
+
+  _.each(formFields, ({ name, noValueErr }) => {
+    if (!values[name]) {
+      errors[name] = noValueErr;
+    }
+  });
+
+  return errors;
+}
+
 export default reduxForm({
-  form: 'surveyForm'
+  validate,
+  form: 'surveyForm',
+  destroyOnUnmount: false
 })(SurveyForm);
